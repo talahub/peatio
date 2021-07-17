@@ -4,6 +4,7 @@ services:
 
   db:
     image: mysql:5.7
+    container_name: peatio_db
     volumes:
       - db_data:/var/lib/mysql
     environment:
@@ -13,7 +14,7 @@ services:
 
   influxdb:
     image: influxdb:1.7.8
-    container_name: influxdb
+    container_name: peatio_influxdb
     ports:
       - "8083:8083"
       - "8086:8086"
@@ -26,6 +27,7 @@ services:
 
   redis:
     image: redis:4.0
+    container_name: peatio_redis
     volumes:
       - redis_data:/data
     ports:
@@ -33,6 +35,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.7.6-management
+    container_name: peatio_rabbitmq
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     ports:
@@ -41,6 +44,7 @@ services:
 
   auth:
     image: quay.io/openware/authz-dummy:0.1.1
+    container_name: peatio_auth
     ports:
       - "8005:8005"
     environment:
@@ -49,13 +53,14 @@ services:
       DUMMY_USER_ROLE: "superadmin"
       DUMMY_USER_LEVEL: 3
       DUMMY_USER_STATE: "active"
-      DUMMY_JWT_PRIVKEY_FILE: "/secrets/rsa-key"
+      DUMMY_JWT_PRIVKEY_FILE: "/keys/rsa-key"
       DUMMY_JWT_TTL: 86400
     volumes:
       - ./secrets:/secrets:ro
 
   gateway:
     image: quay.io/datawire/ambassador:0.50.0-rc3
+    container_name: peatio_gateway
     ports:
       - "8080:80"
     depends_on:
@@ -75,6 +80,7 @@ services:
 
   vault:
     image: vault:1.0.1
+    container_name: peatio_vault
     ports:
       - "8200:8200"
     environment:

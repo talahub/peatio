@@ -120,33 +120,41 @@ private
     # }
 
     def from_payload(p)
+      Rails.logger.info p
       params = filter_payload(p)
       validate_payload(params)
-      member = Member.find_or_create_by(uid: p[:uid], email: p[:email]) do |m|
-        m.role = params[:role]
-        m.state = params[:state]
-        m.level = params[:level]
+      sub = "U" + p[:sub]
+      member = Member.find_or_create_by(uid: sub) do |m|
+        m.email = sub + "@tiki.vn"
+        m.role = "member"
+        m.state = "active"
+        m.level = "3"
       end
-      member.assign_attributes(params)
+      # member.assign_attributes(params)
       member.save! if member.changed?
       member
     end
 
     # Filter and validate payload params
     def filter_payload(payload)
-      payload.slice(:email, :uid, :role, :state, :level)
+      # payload.slice(:email, :uid, :role, :state, :level)
+      payload.slice(:sub)
     end
 
     def validate_payload(p)
-      fetch_email(p)
-      p.fetch(:uid).tap { |uid| raise(Peatio::Auth::Error, 'UID is blank.') if uid.blank? }
-      p.fetch(:role).tap { |role| raise(Peatio::Auth::Error, 'Role is blank.') if role.blank? }
-      p.fetch(:level).tap { |level| raise(Peatio::Auth::Error, 'Level is blank.') if level.blank? }
-      p.fetch(:state).tap do |state|
-        raise(Peatio::Auth::Error, 'State is blank.') if state.blank?
-        raise(Peatio::Auth::Error, 'State is not active.') unless state == 'active'
-      end
+      p.fetch(:sub).tap { |sub| raise(Peatio::Auth::Error, 'Subject is blank.') if sub.blank? }
     end
+
+    # def validate_payload(p)
+    #   fetch_email(p)
+    #   p.fetch(:uid).tap { |uid| raise(Peatio::Auth::Error, 'UID is blank.') if uid.blank? }
+    #   p.fetch(:role).tap { |role| raise(Peatio::Auth::Error, 'Role is blank.') if role.blank? }
+    #   p.fetch(:level).tap { |level| raise(Peatio::Auth::Error, 'Level is blank.') if level.blank? }
+    #   p.fetch(:state).tap do |state|
+    #     raise(Peatio::Auth::Error, 'State is blank.') if state.blank?
+    #     raise(Peatio::Auth::Error, 'State is not active.') unless state == 'active'
+    #   end
+    # end
 
     def fetch_email(payload)
       payload[:email].to_s.tap do |email|
